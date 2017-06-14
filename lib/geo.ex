@@ -24,7 +24,7 @@ defmodule GEO do
 
   # Refresh database file during compilation
   {:ok, _started} = Application.ensure_all_started(:httpoison)
-  case GEO.RefreshDatabase.refresh do
+  case GEO.RefreshDatabase.refresh(true) do
     :ok -> :ok
     :error -> raise "Could not refresh IP database"
   end

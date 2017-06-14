@@ -25,13 +25,15 @@ defmodule GEO.RefreshDatabase do
     {:noreply, state}
   end
 
-  def refresh do
+  def refresh(reload \\ false) do
     if refresh?() do
       with {:ok, file} <- download_database(),
-           :ok <- write_database(file),
-           :ok <- Geolix.reload_databases
+           :ok <- write_database(file)
       do
-        :ok
+        case reload do
+          true -> Geolix.reload_databases
+          false -> :ok
+        end
       else
         _ -> :error
       end
