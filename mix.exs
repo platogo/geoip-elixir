@@ -32,8 +32,7 @@ defmodule GEO.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:distillery, "~> 1.4", runtime: false},
-      {:geolix, "~> 0.13"},
+      {:geolix, github: "elixir-geolix/geolix"},
       {:httpoison, "~> 0.11"}
     ]
   end
