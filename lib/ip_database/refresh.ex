@@ -1,4 +1,6 @@
 defmodule GEO.RefreshDatabase do
+  require Logger
+
   use GenServer
 
   @name __MODULE__
@@ -23,7 +25,22 @@ defmodule GEO.RefreshDatabase do
     {:noreply, state}
   end
 
-  def refresh? do
+  def refresh do
+    if refresh?() do
+      with {:ok, file} <- download_database(),
+           :ok <- write_database(file),
+           :ok <- Geolix.reload_databases
+      do
+        :ok
+      else
+        _ -> :error
+      end
+    else
+      :ok
+    end
+  end
+
+  defp refresh? do
     case File.read(Const.encode(:ip_database_file)) do
       {:error, _} -> true
       {:ok, _} -> database_time_diff() >= (@refresh_interval / 1000) - 60
@@ -43,14 +60,20 @@ defmodule GEO.RefreshDatabase do
     |> Map.fetch!(:mtime)
   end
 
-  defp refresh do
-    if refresh?() do
-      case Mix.Tasks.Geo.RefreshIpDatabaseTask.run(nil) do
-        :ok -> Geolix.reload_databases
-        :error -> :error
-      end
-    else
-      :ok
+  defp download_database do
+    url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
+    license_key = Application.get_env(:geo, :maxmind_license_key)
+    Logger.info "Downloading IP database"
+    case HTTPoison.get("#{url}&license_key=#{license_key}") do
+      {:ok, %HTTPoison.Response{body: body}} -> {:ok, body}
+      {:error, _} -> :error
+    end
+  end
+
+  defp write_database(file) do
+    case File.write(Const.encode(:ip_database_file), file) do
+      :ok -> :ok
+      {:error, _} -> :error
     end
   end
 end

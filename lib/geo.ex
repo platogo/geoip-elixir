@@ -23,10 +23,9 @@ defmodule GEO do
   end
 
   # Refresh database file during compilation
-  if GEO.RefreshDatabase.refresh? do
-    case Mix.Tasks.Geo.RefreshIpDatabaseTask.run(nil) do
-      :ok -> :ok
-      :error -> raise "Could not refresh IP database"
-    end
+  {:ok, _started} = Application.ensure_all_started(:httpoison)
+  case GEO.RefreshDatabase.refresh do
+    :ok -> :ok
+    :error -> raise "Could not refresh IP database"
   end
 end
