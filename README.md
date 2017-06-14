@@ -1,16 +1,20 @@
-# GEO
+# GeoIP Elixir
 
-**TODO: Add description**
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `geo` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:geo, "~> 0.1.0"}]
+  [{:geo, git: "git@github.com:platogo/geoip-elixir.git"}]
 end
+```
+
+Make sure to specify the Maxmind license key in your application:
+
+```
+config :geo,
+  maxmind_license_key: "your key"
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
