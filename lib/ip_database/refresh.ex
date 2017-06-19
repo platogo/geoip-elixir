@@ -67,8 +67,8 @@ defmodule GEO.RefreshDatabase do
     license_key = Application.get_env(:geo, :maxmind_license_key)
     Logger.info "Downloading IP database"
     case HTTPoison.get("#{url}&license_key=#{license_key}") do
-      {:ok, %HTTPoison.Response{body: body}} -> {:ok, body}
-      {:error, _} -> :error
+      {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> {:ok, body}
+      _ -> :error
     end
   end
 
