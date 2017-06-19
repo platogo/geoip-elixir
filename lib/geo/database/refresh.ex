@@ -25,7 +25,7 @@ defmodule GEO.Database.Refresh do
     {:noreply, state}
   end
 
-  def refresh(reload \\ false) do
+  def refresh(reload \\ true) do
     if refresh?() do
       with {:ok, file} <- download_database(),
            :ok <- write_database(file)
