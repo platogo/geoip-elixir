@@ -50,10 +50,8 @@ defmodule GEO.Database.Refresh do
   end
 
   defp database_time_diff do
-    (:calendar.universal_time()
-    |> :calendar.datetime_to_gregorian_seconds) -
-    (database_last_modified()
-    |> :calendar.datetime_to_gregorian_seconds)
+    (:calendar.universal_time |> :calendar.datetime_to_gregorian_seconds) -
+      (database_last_modified() |> :calendar.datetime_to_gregorian_seconds)
   end
 
   defp database_last_modified do
