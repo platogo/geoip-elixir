@@ -7,7 +7,7 @@ defmodule GEO do
     configure_ip_database()
 
     children = [
-      worker(GEO.RefreshDatabase, [])
+      worker(GEO.Database.Refresh, [])
     ]
 
     options = [strategy: :one_for_one, name: GEO.Supervisor]
@@ -18,13 +18,13 @@ defmodule GEO do
      Geolix.load_database(%{
        id: :city,
        adapter: Geolix.Adapter.MMDB2,
-       source: Const.encode(:ip_database_file)
+       source: GEO.Const.encode(:ip_database_file)
      })
   end
 
   # Refresh database file during compilation
   {:ok, _started} = Application.ensure_all_started(:httpoison)
-  case GEO.RefreshDatabase.refresh(true) do
+  case GEO.Database.Refresh.refresh(true) do
     :ok -> :ok
     :error -> raise "Could not refresh IP database"
   end

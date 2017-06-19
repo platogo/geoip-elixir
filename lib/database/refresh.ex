@@ -1,4 +1,4 @@
-defmodule GEO.RefreshDatabase do
+defmodule GEO.Database.Refresh do
   require Logger
 
   use GenServer
@@ -43,7 +43,7 @@ defmodule GEO.RefreshDatabase do
   end
 
   defp refresh? do
-    case File.read(Const.encode(:ip_database_file)) do
+    case File.read(GEO.Const.encode(:ip_database_file)) do
       {:error, _} -> true
       {:ok, _} -> database_time_diff() >= (@refresh_interval / 1000) - 60
     end
@@ -57,7 +57,7 @@ defmodule GEO.RefreshDatabase do
   end
 
   defp database_last_modified do
-    Const.encode(:ip_database_file)
+    GEO.Const.encode(:ip_database_file)
     |> File.stat!
     |> Map.fetch!(:mtime)
   end
@@ -73,7 +73,7 @@ defmodule GEO.RefreshDatabase do
   end
 
   defp write_database(file) do
-    case File.write(Const.encode(:ip_database_file), file) do
+    case File.write(GEO.Const.encode(:ip_database_file), file) do
       :ok -> :ok
       {:error, _} -> :error
     end

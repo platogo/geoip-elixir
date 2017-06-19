@@ -1,4 +1,4 @@
-defmodule Const do
+defmodule GEO.Const do
   values = [
     ip_database_file: Path.join(:code.priv_dir(:geo), "ip_database.tar.gz")
     ]
