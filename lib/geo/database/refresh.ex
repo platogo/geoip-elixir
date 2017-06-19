@@ -43,9 +43,9 @@ defmodule GEO.Database.Refresh do
   end
 
   defp refresh? do
-    case File.read(GEO.Const.encode(:ip_database_file)) do
-      {:error, _} -> true
-      {:ok, _} -> database_time_diff() >= (@refresh_interval / 1000) - 60
+    case File.exists?(GEO.Const.encode(:ip_database_file)) do
+      false -> true
+      true -> database_time_diff() >= (@refresh_interval / 1000) - 60
     end
   end
 
