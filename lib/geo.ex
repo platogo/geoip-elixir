@@ -18,7 +18,7 @@ defmodule GEO do
      Geolix.load_database(%{
        id: :city,
        adapter: Geolix.Adapter.MMDB2,
-       source: GEO.Const.encode(:ip_database_file)
+       source: GEO.Database.source_path
      })
   end
 

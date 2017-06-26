@@ -43,7 +43,7 @@ defmodule GEO.Database.Refresh do
   end
 
   defp refresh? do
-    case File.exists?(GEO.Const.encode(:ip_database_file)) do
+    case File.exists?(GEO.Database.source_path) do
       false -> true
       true -> database_time_diff() >= (@refresh_interval / 1000) - 60
     end
@@ -55,7 +55,7 @@ defmodule GEO.Database.Refresh do
   end
 
   defp database_last_modified do
-    GEO.Const.encode(:ip_database_file)
+    GEO.Database.source_path
     |> File.stat!
     |> Map.fetch!(:mtime)
   end
@@ -71,7 +71,7 @@ defmodule GEO.Database.Refresh do
   end
 
   defp write_database(file) do
-    case File.write(GEO.Const.encode(:ip_database_file), file) do
+    case File.write(GEO.Database.source_path, file) do
       :ok -> :ok
       {:error, _} -> :error
     end
