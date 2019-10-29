@@ -20,7 +20,7 @@ defmodule GEO.Mixfile do
   defp deps do
     [
       {:geolix, "~> 0.18"},
-      {:httpoison, "~> 1.5"}
+      {:httpoison, "~> 1.6"}
     ]
   end
 end
