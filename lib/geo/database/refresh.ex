@@ -35,6 +35,7 @@ defmodule GEO.Database.Refresh do
           false -> :ok
         end
       else
+        :ignore -> :ok
         _ -> :error
       end
     else
@@ -61,14 +62,22 @@ defmodule GEO.Database.Refresh do
   end
 
   defp download_database do
+    Application.get_env(:geo, :maxmind_license_key)
+    |> do_download_database()
+  end
+
+  defp do_download_database("IGNORE"), do: :ignore
+
+  defp do_download_database(license_key) do
     url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
-    license_key = Application.get_env(:geo, :maxmind_license_key)
     Logger.info "Downloading IP database"
     case HTTPoison.get("#{url}&license_key=#{license_key}") do
       {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> {:ok, body}
       _ -> :error
     end
   end
+
+  defp write_database(:ignore), do: :ignore
 
   defp write_database(file) do
     case File.write(GEO.Database.source_path, file) do
