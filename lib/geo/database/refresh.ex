@@ -8,7 +8,7 @@ defmodule GEO.Database.Refresh do
   @hours_24 24 * 60 * 60 * 1000
   @refresh_interval @hours_24
 
-  def start_link do
+  def start_link([]) do
     GenServer.start_link(@name, :ok, name: @name)
   end
 
@@ -22,16 +22,16 @@ defmodule GEO.Database.Refresh do
       :ok -> Process.send_after(self(), :refresh, @refresh_interval)
       :error -> Process.send_after(self(), :refresh, @minutes_2)
     end
+
     {:noreply, state}
   end
 
   def refresh(reload \\ true) do
     if refresh?() do
       with {:ok, file} <- download_database(),
-           :ok <- write_database(file)
-      do
+           :ok <- write_database(file) do
         case reload do
-          true -> Geolix.reload_databases
+          true -> Geolix.reload_databases()
           false -> :ok
         end
       else
@@ -44,20 +44,20 @@ defmodule GEO.Database.Refresh do
   end
 
   defp refresh? do
-    case File.exists?(GEO.Database.source_path) do
+    case File.exists?(GEO.Database.source_path()) do
       false -> true
-      true -> database_time_diff() >= (@refresh_interval / 1000) - 60
+      true -> database_time_diff() >= @refresh_interval / 1000 - 60
     end
   end
 
   defp database_time_diff do
-    (:calendar.universal_time |> :calendar.datetime_to_gregorian_seconds) -
-      (database_last_modified() |> :calendar.datetime_to_gregorian_seconds)
+    (:calendar.universal_time() |> :calendar.datetime_to_gregorian_seconds()) -
+      (database_last_modified() |> :calendar.datetime_to_gregorian_seconds())
   end
 
   defp database_last_modified do
-    GEO.Database.source_path
-    |> File.stat!
+    GEO.Database.source_path()
+    |> File.stat!()
     |> Map.fetch!(:mtime)
   end
 
@@ -70,7 +70,8 @@ defmodule GEO.Database.Refresh do
 
   defp do_download_database(license_key) do
     url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
-    Logger.info "Downloading IP database"
+    Logger.info("Downloading IP database")
+
     case HTTPoison.get("#{url}&license_key=#{license_key}") do
       {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> {:ok, body}
       _ -> :error
@@ -80,7 +81,7 @@ defmodule GEO.Database.Refresh do
   defp write_database(:ignore), do: :ignore
 
   defp write_database(file) do
-    case File.write(GEO.Database.source_path, file) do
+    case File.write(GEO.Database.source_path(), file) do
       :ok -> :ok
       {:error, _} -> :error
     end

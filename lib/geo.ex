@@ -5,7 +5,7 @@ defmodule GEO do
     configure_ip_database()
 
     children = [
-      {GEO.Database.Refresh, []}
+      GEO.Database.Refresh
     ]
 
     options = [strategy: :one_for_one, name: GEO.Supervisor]
