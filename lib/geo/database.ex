@@ -1,5 +1,6 @@
 defmodule GEO.Database do
   def source_path do
-    Path.join("#{:code.priv_dir(:geo)}", "ip_database.tar.gz")
+    Application.get_env(:geo, :database_path, "#{:code.priv_dir(:geo)}")
+     |> Path.join("ip_database.tar.gz")
   end
 end
