@@ -69,7 +69,7 @@ defmodule GEO.Database.Refresh do
       !File.exists?(GEO.Database.source_path()) ->
         true
 
-      database_time_diff() >= @refresh_interval / 1000 - 60 ->
+      database_expired?() ->
         true
 
       true ->
@@ -80,6 +80,10 @@ defmodule GEO.Database.Refresh do
   defp database_time_diff do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) -
       :calendar.datetime_to_gregorian_seconds(database_last_modified())
+  end
+
+  defp database_expired? do
+    database_time_diff() >= @refresh_interval / 1000 - 60
   end
 
   defp database_last_modified do
