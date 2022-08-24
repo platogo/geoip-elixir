@@ -1,58 +1,89 @@
 defmodule GEO.Database.Refresh do
+  @moduledoc """
+  GeoIP database refresh GenServer behaviour implementation.
+
+  The worker will download the GeoIP database if it is missing, and will redownload it if it becomes expired.
+  """
   require Logger
 
   use GenServer
 
   @name __MODULE__
-  @minutes_2 2 * 60 * 1000
-  @hours_24 24 * 60 * 60 * 1000
-  @refresh_interval @hours_24
+  @refresh_interval :timer.hours(24)
 
+  # Client API
+
+  @spec start_link([]) :: :ignore | {:error, any} | {:ok, pid}
   def start_link([]) do
     GenServer.start_link(@name, :ok, name: @name)
   end
 
-  def init(:ok) do
-    Process.send(self(), :refresh, [])
-    {:ok, nil}
-  end
-
-  def handle_info(:refresh, state) do
-    case refresh() do
-      :ok -> Process.send_after(self(), :refresh, @refresh_interval)
-      :error -> Process.send_after(self(), :refresh, @minutes_2)
-    end
-
-    {:noreply, state}
-  end
-
+  @spec refresh(boolean()) :: :error | :ok
   def refresh(reload \\ true) do
     if refresh?() do
-      with {:ok, file} <- download_database(),
-           :ok <- write_database(file) do
-        case reload do
-          true -> Geolix.reload_databases()
-          false -> :ok
-        end
+      with {:ok, file} <- do_download_database(),
+           :ok <- File.write(GEO.Database.source_path(), file) do
+        if(reload, do: Geolix.reload_databases())
       else
-        :ignore -> :ok
-        _ -> :error
+        :ignore ->
+          :ok
+
+        {:error, error} ->
+          Logger.error("Failed to refresh database, reason: #{error}")
+          :error
+
+        _ ->
+          :error
       end
     else
       :ok
     end
   end
 
+  # Callbacks
+
+  @impl true
+  @spec init(:ok) :: {:ok, nil}
+  def init(:ok) do
+    Process.send(self(), :refresh, [])
+    {:ok, nil}
+  end
+
+  @impl true
+  def handle_info(:refresh, state) do
+    case refresh() do
+      :ok -> Process.send_after(self(), :refresh, @refresh_interval)
+      :error -> Process.send_after(self(), :refresh, :timer.minutes(2))
+    end
+
+    {:noreply, state}
+  end
+
+  # Decides whether to refresh the GeoIP DB. It will be refreshed if the file does not exist yet or it is
+  # older than the refresh interval
   defp refresh? do
-    case File.exists?(GEO.Database.source_path()) do
-      false -> true
-      true -> database_time_diff() >= @refresh_interval / 1000 - 60
+    cond do
+      Application.get_env(:geo, :disable_refresh) ->
+        false
+
+      !File.exists?(GEO.Database.source_path()) ->
+        true
+
+      database_expired?() ->
+        true
+
+      true ->
+        false
     end
   end
 
   defp database_time_diff do
-    (:calendar.universal_time() |> :calendar.datetime_to_gregorian_seconds()) -
-      (database_last_modified() |> :calendar.datetime_to_gregorian_seconds())
+    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time()) -
+      :calendar.datetime_to_gregorian_seconds(database_last_modified())
+  end
+
+  defp database_expired? do
+    database_time_diff() >= @refresh_interval / 1000 - 60
   end
 
   defp database_last_modified do
@@ -61,29 +92,13 @@ defmodule GEO.Database.Refresh do
     |> Map.fetch!(:mtime)
   end
 
-  defp download_database do
-    Application.get_env(:geo, :maxmind_license_key)
-    |> do_download_database()
-  end
-
-  defp do_download_database("IGNORE"), do: :ignore
-
-  defp do_download_database(license_key) do
+  defp do_download_database(license_key \\ Application.get_env(:geo, :maxmind_license_key)) do
     url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
     Logger.info("Downloading IP database")
 
     case HTTPoison.get("#{url}&license_key=#{license_key}") do
       {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> {:ok, body}
       _ -> :error
-    end
-  end
-
-  defp write_database(:ignore), do: :ignore
-
-  defp write_database(file) do
-    case File.write(GEO.Database.source_path(), file) do
-      :ok -> :ok
-      {:error, _} -> :error
     end
   end
 end
