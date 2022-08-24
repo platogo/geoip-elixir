@@ -1,11 +1,12 @@
 # GeoIP Elixir
 
+Wrapper around Geolix that supports periodic refresh of the GeoIP database.
 
 ## Installation
 
 ```elixir
 def deps do
-  [{:geo, git: "git@github.com:platogo/geoip-elixir.git"}, tag: "1.4.5"]
+  [{:geo, git: "git@github.com:platogo/geoip-elixir.git"}, tag: "1.4.6"]
 end
 ```
 

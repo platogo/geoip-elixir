@@ -23,7 +23,7 @@ defmodule GEO.Database.Refresh do
     if refresh?() do
       with {:ok, file} <- do_download_database(),
            :ok <- File.write(GEO.Database.source_path(), file) do
-        if(reload, do: Geolix.reload_databases())
+        if(reload, do: Geolix.reload_databases(), else: :ok)
       else
         :ignore ->
           :ok
