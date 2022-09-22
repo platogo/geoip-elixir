@@ -4,7 +4,7 @@ defmodule GEO.Mixfile do
   def project do
     [
       app: :geo,
-      version: "1.4.6",
+      version: "1.4.7",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
