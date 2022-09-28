@@ -21,7 +21,7 @@ defmodule GEO.Database.Refresh do
   @spec refresh(boolean()) :: :error | :ok
   def refresh(reload \\ true) do
     if refresh?() do
-      with {:ok, file} <- do_download_database(),
+      with {:ok, file} <- download_database(),
            :ok <- File.write(GEO.Database.source_path(), file) do
         if(reload, do: Geolix.reload_databases(), else: :ok)
       else
@@ -92,13 +92,22 @@ defmodule GEO.Database.Refresh do
     |> Map.fetch!(:mtime)
   end
 
-  defp do_download_database(license_key \\ Application.get_env(:geo, :maxmind_license_key)) do
+  defp download_database() do
     url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
     Logger.info("Downloading IP database")
 
-    case HTTPoison.get("#{url}&license_key=#{license_key}") do
-      {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> {:ok, body}
-      _ -> :error
+    with license_key when not is_nil(license_key) <-
+           Application.get_env(:geo, :maxmind_license_key),
+         {:ok, %HTTPoison.Response{body: body, status_code: 200}} <-
+           HTTPoison.get("#{url}&license_key=#{license_key}") do
+      {:ok, body}
+    else
+      nil ->
+        Logger.error("MAXMIND License key not set")
+        :ignore
+
+      _ ->
+        :error
     end
   end
 end
