@@ -93,21 +93,29 @@ defmodule GEO.Database.Refresh do
   end
 
   defp download_database() do
-    url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoIP2-City&suffix=tar.gz"
+    url = "https://download.maxmind.com/geoip/databases/GeoIP2-City/download?suffix=tar.gz"
     Logger.info("Downloading IP database")
 
-    with license_key when not is_nil(license_key) <-
-           Application.get_env(:geo, :maxmind_license_key),
+    with {:ok, authorization_header} <- authoriziation_header(),
+         {:ok, %HTTPoison.Response{headers: headers, status_code: 302}} <-
+           HTTPoison.get(url, [authorization_header]),
          {:ok, %HTTPoison.Response{body: body, status_code: 200}} <-
-           HTTPoison.get("#{url}&license_key=#{license_key}") do
+           HTTPoison.get(Map.new(headers)["Location"], [], timeout: 200_000, recv_timeout: 200_000) do
       {:ok, body}
     else
-      nil ->
+      {:error, :maxmind_license_key} ->
         Logger.error("MAXMIND License key not set")
         :ignore
 
       _ ->
         :error
+    end
+  end
+
+  defp authoriziation_header do
+    case Application.get_env(:geo, :maxmind_license_key) do
+      nil -> {:error, :maxmind_license_key_not_set}
+      license_key -> {:ok, {"Authorization", "Basic #{Base.encode64("83191:#{license_key}")}"}}
     end
   end
 end
