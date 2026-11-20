@@ -22,8 +22,8 @@ defmodule GEO.Mixfile do
   defp deps do
     [
       {:geolix, "~> 2.0"},
-      {:geolix_adapter_mmdb2, "~> 0.6.0"},
-      {:httpoison, "~> 2.2"}
+      {:geolix_adapter_mmdb2, "~> 0.7.0"},
+      {:httpoison, "~> 3.0"}
     ]
   end
 end
