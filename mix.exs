@@ -4,8 +4,8 @@ defmodule GEO.Mixfile do
   def project do
     [
       app: :geo,
-      version: "1.5.0",
-      elixir: "~> 1.16",
+      version: "1.6.0",
+      elixir: "~> 1.20",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -22,8 +22,8 @@ defmodule GEO.Mixfile do
   defp deps do
     [
       {:geolix, "~> 2.0"},
-      {:geolix_adapter_mmdb2, "~> 0.6.0"},
-      {:httpoison, "~> 2.2"}
+      {:geolix_adapter_mmdb2, "~> 0.7.0"},
+      {:httpoison, "~> 3.0"}
     ]
   end
 end
