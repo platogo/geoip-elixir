@@ -99,8 +99,9 @@ defmodule GEO.Database.Refresh do
     with {:ok, authorization_header} <- authoriziation_header(),
          {:ok, %HTTPoison.Response{headers: headers, status_code: 302}} <-
            HTTPoison.get(url, [authorization_header]),
+         {:ok, location} <- location_header(headers),
          {:ok, %HTTPoison.Response{body: body, status_code: 200}} <-
-           HTTPoison.get(Map.new(headers)["Location"], [], timeout: 200_000, recv_timeout: 200_000) do
+           HTTPoison.get(location, [], timeout: 200_000, recv_timeout: 200_000) do
       {:ok, body}
     else
       {:error, :maxmind_license_key} ->
@@ -109,6 +110,15 @@ defmodule GEO.Database.Refresh do
 
       _ ->
         :error
+    end
+  end
+
+  # HTTP header names are case-insensitive, and HTTP clients may return them in lowercase
+  # (e.g. HTTPoison 3 / hackney 4), so match "location" without regard to case.
+  defp location_header(headers) do
+    case Enum.find(headers, fn {name, _value} -> String.downcase(name) == "location" end) do
+      {_name, location} -> {:ok, location}
+      nil -> {:error, :location_header_missing}
     end
   end
 
