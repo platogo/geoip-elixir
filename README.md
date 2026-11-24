@@ -6,7 +6,7 @@ Wrapper around Geolix that supports periodic refresh of the GeoIP database.
 
 ```elixir
 def deps do
-  [{:geo, git: "git@github.com:platogo/geoip-elixir.git", tag: "1.6.0"}]
+  [{:geo, git: "git@github.com:platogo/geoip-elixir.git", tag: "1.6.1"}]
 end
 ```
 
